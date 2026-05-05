@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="80" fill="#7c4a1e"/>
+  <rect width="512" height="512" rx="80" fill="url(#bg)"/>
+  <defs>
+    <radialGradient id="bg" cx="40%" cy="30%">
+      <stop offset="0%" stop-color="#a0622a"/>
+      <stop offset="100%" stop-color="#4a2a0e"/>
+    </radialGradient>
+  </defs>
+  <!-- Cup body -->
+  <path d="M154 214 L176 374 Q176 394 202 394 L310 394 Q336 394 336 374 L358 214 Z" fill="#f5e6c8" opacity="0.95"/>
+  <!-- Cup rim -->
+  <rect x="138" y="196" width="236" height="32" rx="16" fill="#f5e6c8" opacity="0.95"/>
+  <!-- Coffee liquid surface -->
+  <ellipse cx="256" cy="228" rx="96" ry="16" fill="#7c4a1e" opacity="0.6"/>
+  <!-- Handle -->
+  <path d="M336 268 Q400 268 400 314 Q400 362 336 362" fill="none" stroke="#f5e6c8" stroke-width="20" stroke-linecap="round" opacity="0.95"/>
+  <!-- Steam wisps -->
+  <path d="M208 164 Q220 138 208 116" fill="none" stroke="#f5e6c8" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
+  <path d="M256 154 Q268 124 256 96" fill="none" stroke="#f5e6c8" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
+  <path d="M304 164 Q316 138 304 116" fill="none" stroke="#f5e6c8" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
+</svg>

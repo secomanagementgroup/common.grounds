@@ -1,0 +1,25 @@
+{
+  "name": "Common Grounds",
+  "short_name": "Common Grounds",
+  "description": "Coffee Cart Sales Tracker",
+  "start_url": "/Common-Grounds/",
+  "scope": "/Common-Grounds/",
+  "display": "standalone",
+  "background_color": "#1c1008",
+  "theme_color": "#7c4a1e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/Common-Grounds/icon-192.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/Common-Grounds/icon-512.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
