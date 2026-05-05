@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Settings, BarChart2, Coffee, List } from 'lucide-react';
+import logoUrl from './assets/logo.png';
 import { supabase, Session, DrinkButton, ButtonModifier, Sale } from './lib/supabase';
 import SessionPanel from './components/SessionPanel';
 import EditButtonsPanel from './components/EditButtonsPanel';
@@ -136,7 +137,7 @@ export default function App() {
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 bg-stone-900 border-b border-stone-800 shrink-0">
         <div className="flex items-center gap-3">
-          <img src="/CommonGroundsCUPONLY.png" alt="Common Grounds" className="w-9 h-9 object-contain" />
+          <img src={logoUrl} alt="Common Grounds" className="w-9 h-9 object-contain" />
           <div>
             <h1 className="text-base font-bold text-stone-100 leading-tight">Common Grounds</h1>
             {activeSession ? (
