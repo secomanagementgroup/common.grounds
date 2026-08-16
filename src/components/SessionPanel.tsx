@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { X, Clock, CheckCircle, ChevronRight, Plus, Trash2 } from 'lucide-react';
-import { supabase, Session, DrinkButton } from '../lib/supabase';
+import { db, Session, DrinkButton } from '../lib/supabase';
 import SessionSetupSheet from './SessionSetupSheet';
 
 interface Props {
@@ -25,12 +25,9 @@ export default function SessionPanel({ sessions, activeSession, buttons, onClose
   async function createSession(name: string, activeButtonIds: string[], cupSizeEnabled: boolean) {
     setCreating(true);
     if (activeSession) {
-      await supabase
-        .from('sessions')
-        .update({ is_active: false, ended_at: new Date().toISOString() })
-        .eq('id', activeSession.id);
+      await db.update('sessions', [{ column: 'id', value: activeSession.id }], { is_active: false, ended_at: new Date().toISOString() });
     }
-    await supabase.from('sessions').insert({
+    await db.insert('sessions', {
       name,
       is_active: true,
       active_button_ids: activeButtonIds,
@@ -43,17 +40,14 @@ export default function SessionPanel({ sessions, activeSession, buttons, onClose
 
   async function endSession() {
     if (!activeSession) return;
-    await supabase
-      .from('sessions')
-      .update({ is_active: false, ended_at: new Date().toISOString() })
-      .eq('id', activeSession.id);
+    await db.update('sessions', [{ column: 'id', value: activeSession.id }], { is_active: false, ended_at: new Date().toISOString() });
     onSessionsChange();
   }
 
   async function deleteSession(id: string) {
     setDeleting(true);
-    await supabase.from('sales').delete().eq('session_id', id);
-    await supabase.from('sessions').delete().eq('id', id);
+    await db.delete('sales', [{ column: 'session_id', value: id }]);
+    await db.delete('sessions', [{ column: 'id', value: id }]);
     setConfirmDeleteId(null);
     setDeleting(false);
     onSessionsChange();

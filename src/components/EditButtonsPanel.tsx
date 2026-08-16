@@ -15,7 +15,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { supabase, DrinkButton, ButtonModifier } from '../lib/supabase';
+import { db, DrinkButton, ButtonModifier } from '../lib/supabase';
 
 const PALETTE = [
   '#C2855A', '#8B5E3C', '#4A2C17', '#2C4A6E',
@@ -349,25 +349,25 @@ export default function EditButtonsPanel({ buttons, modifiers, onClose, onButton
   }
 
   async function saveEdit(btn: DrinkButton) {
-    await supabase.from('drink_buttons').update({
+    await db.update('drink_buttons', [{ column: 'id', value: btn.id }], {
       label: editLabel.trim() || btn.label,
       color: editColor,
       image_url: editImageUrl.trim() || null,
       is_toggle: editIsToggle,
-    }).eq('id', btn.id);
+    });
     setEditingId(null);
     onButtonsChange();
   }
 
   async function deleteButton(id: string) {
-    await supabase.from('drink_buttons').delete().eq('id', id);
+    await db.delete('drink_buttons', [{ column: 'id', value: id }]);
     onButtonsChange();
     onModifiersChange();
   }
 
   async function addButton() {
     const maxOrder = buttons.reduce((m, b) => Math.max(m, b.display_order), 0);
-    await supabase.from('drink_buttons').insert({
+    await db.insert('drink_buttons', {
       label: 'New Drink',
       color: '#C2855A',
       display_order: maxOrder + 1,
@@ -382,12 +382,11 @@ export default function EditButtonsPanel({ buttons, modifiers, onClose, onButton
     setUploading(true);
     const ext = file.name.split('.').pop();
     const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { data, error } = await supabase.storage
-      .from('button-images')
-      .upload(filename, file, { upsert: false });
-    if (!error && data) {
-      const { data: urlData } = supabase.storage.from('button-images').getPublicUrl(data.path);
-      setEditImageUrl(urlData.publicUrl);
+    const arrayBuffer = await file.arrayBuffer();
+    const fileBytes = new Uint8Array(arrayBuffer);
+    const { data: uploadData, error: uploadError } = await db.upload('button-images', filename, fileBytes, file.type);
+    if (!uploadError && uploadData) {
+      setEditImageUrl(uploadData.publicUrl);
     }
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -397,7 +396,7 @@ export default function EditButtonsPanel({ buttons, modifiers, onClose, onButton
     if (!newModLabel.trim()) return;
     const options = newModOptions.split(',').map(o => o.trim()).filter(Boolean);
     const existing = modifiers.filter(m => m.button_id === buttonId);
-    await supabase.from('button_modifiers').insert({
+    await db.insert('button_modifiers', {
       button_id: buttonId,
       label: newModLabel.trim(),
       options,
@@ -409,13 +408,13 @@ export default function EditButtonsPanel({ buttons, modifiers, onClose, onButton
   }
 
   async function deleteModifier(id: string) {
-    await supabase.from('button_modifiers').delete().eq('id', id);
+    await db.delete('button_modifiers', [{ column: 'id', value: id }]);
     onModifiersChange();
   }
 
   async function updateModifierOptions(modifier: ButtonModifier, rawOptions: string) {
     const options = rawOptions.split(',').map(o => o.trim()).filter(Boolean);
-    await supabase.from('button_modifiers').update({ options }).eq('id', modifier.id);
+    await db.update('button_modifiers', [{ column: 'id', value: modifier.id }], { options });
     onModifiersChange();
   }
 
@@ -433,7 +432,7 @@ export default function EditButtonsPanel({ buttons, modifiers, onClose, onButton
       .filter((u, i) => buttons[i]?.id !== u.id);
 
     await Promise.all(
-      updates.map(u => supabase.from('drink_buttons').update({ display_order: u.display_order }).eq('id', u.id))
+      updates.map(u => db.update('drink_buttons', [{ column: 'id', value: u.id }], { display_order: u.display_order }))
     );
 
     onButtonsChange();

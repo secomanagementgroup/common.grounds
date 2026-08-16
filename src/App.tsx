@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Settings, BarChart2, Coffee, List } from 'lucide-react';
 import logoUrl from './assets/logo.png';
-import { supabase, isSupabaseConfigured, Session, DrinkButton, ButtonModifier, Sale } from './lib/supabase';
+import { db, isSupabaseConfigured, Session, DrinkButton, ButtonModifier, Sale } from './lib/supabase';
 import SessionPanel from './components/SessionPanel';
 import EditButtonsPanel from './components/EditButtonsPanel';
 import SalesLogDrawer from './components/SalesLogDrawer';
@@ -39,31 +39,28 @@ export default function App() {
   const tappedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadSessions = useCallback(async () => {
-    const { data, error } = await supabase.from('sessions').select('*').order('created_at', { ascending: false });
-    if (error) { setDbError(`sessions: ${error.message}`); return; }
+    const { data, error } = await db.select<Session>('sessions', 'created_at');
+    if (error) { setDbError(`sessions: ${error}`); return; }
     setSessions(data ?? []);
     setActiveSession(data?.find(s => s.is_active) ?? null);
   }, []);
 
   const loadButtons = useCallback(async () => {
-    const { data, error } = await supabase.from('drink_buttons').select('*').order('display_order');
-    if (error) { setDbError(`buttons: ${error.message}`); return; }
+    const { data, error } = await db.select<DrinkButton>('drink_buttons', 'display_order');
+    if (error) { setDbError(`buttons: ${error}`); return; }
     setButtons(data ?? []);
   }, []);
 
   const loadModifiers = useCallback(async () => {
-    const { data, error } = await supabase.from('button_modifiers').select('*').order('display_order');
-    if (error) { setDbError(`modifiers: ${error.message}`); return; }
+    const { data, error } = await db.select<ButtonModifier>('button_modifiers', 'display_order');
+    if (error) { setDbError(`modifiers: ${error}`); return; }
     setModifiers(data ?? []);
   }, []);
 
   const loadSales = useCallback(async (sessionId: string) => {
-    const { data } = await supabase
-      .from('sales')
-      .select('*')
-      .eq('session_id', sessionId)
-      .order('tapped_at', { ascending: false });
-    if (data) setSales(data);
+    const { data, error } = await db.select<Sale>('sales', 'tapped_at', [{ column: 'session_id', value: sessionId }]);
+    if (error) { setDbError(`sales: ${error}`); return; }
+    setSales(data ?? []);
   }, []);
 
   useEffect(() => {
@@ -95,8 +92,9 @@ export default function App() {
       }))
     );
     if (rows.length === 0) return;
-    const { data } = await supabase.from('sales').insert(rows).select();
-    if (data) setSales(prev => [...data.reverse(), ...prev]);
+    const { data, error } = await db.insert<Sale>('sales', rows);
+    if (error) { setDbError(`recordSale: ${error}`); return; }
+    if (data && data.length > 0) setSales(prev => [...data.reverse(), ...prev]);
   }
 
   async function recordSimpleSale(btn: DrinkButton) {
@@ -129,11 +127,8 @@ export default function App() {
   }
 
   async function loadViewingSession(session: Session) {
-    const { data } = await supabase
-      .from('sales')
-      .select('*')
-      .eq('session_id', session.id)
-      .order('tapped_at', { ascending: false });
+    const { data, error } = await db.select<Sale>('sales', 'tapped_at', [{ column: 'session_id', value: session.id }]);
+    if (error) { setDbError(`viewSession: ${error}`); return; }
     setViewingSales(data ?? []);
     setViewingSession(session);
   }

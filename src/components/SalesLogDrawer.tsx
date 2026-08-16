@@ -1,5 +1,5 @@
 import { X, Trash2, Coffee } from 'lucide-react';
-import { supabase, Sale, DrinkButton } from '../lib/supabase';
+import { db, Sale, DrinkButton } from '../lib/supabase';
 
 interface Props {
   sales: Sale[];
@@ -22,7 +22,7 @@ export default function SalesLogDrawer({ sales, buttons, onClose, onSalesChange,
   const countEntries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
 
   async function deleteSale(id: string) {
-    await supabase.from('sales').delete().eq('id', id);
+    await db.delete('sales', [{ column: 'id', value: id }]);
     onSalesChange();
   }
 
