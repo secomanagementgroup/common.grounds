@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Settings, BarChart2, Coffee, List } from 'lucide-react';
 import logoUrl from './assets/logo.png';
-import { supabase, Session, DrinkButton, ButtonModifier, Sale } from './lib/supabase';
+import { supabase, isSupabaseConfigured, Session, DrinkButton, ButtonModifier, Sale } from './lib/supabase';
 import SessionPanel from './components/SessionPanel';
 import EditButtonsPanel from './components/EditButtonsPanel';
 import SalesLogDrawer from './components/SalesLogDrawer';
@@ -195,6 +195,17 @@ export default function App() {
           >
             Start Session
           </button>
+        </div>
+      )}
+
+      {/* Database connection diagnostic */}
+      {!isSupabaseConfigured && (
+        <div className="mx-4 mt-4 p-4 rounded-2xl bg-red-900/30 border border-red-700/50">
+          <p className="text-sm font-semibold text-red-300">Database not configured</p>
+          <p className="text-xs text-red-400/80 mt-1">
+            Add GitHub secrets <span className="font-mono">VITE_SUPABASE_URL</span> and{' '}
+            <span className="font-mono">VITE_SUPABASE_ANON_KEY</span> to your repository, then re-run the deploy workflow.
+          </p>
         </div>
       )}
 
