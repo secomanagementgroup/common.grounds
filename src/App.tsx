@@ -10,12 +10,18 @@ import ModifierSheet, { SaleGroup } from './components/ModifierSheet';
 
 type ActivePanel = 'session' | 'edit' | 'log' | null;
 
-function isLightColor(hex: string): boolean {
-  const c = hex.replace('#', '');
+function isLightColor(color: string): boolean {
+  const c = color.replace('#', '');
+  if (!/^[0-9a-fA-F]{6}$/.test(c)) return false;
   const r = parseInt(c.substring(0, 2), 16);
   const g = parseInt(c.substring(2, 4), 16);
   const b = parseInt(c.substring(4, 6), 16);
   return (r * 299 + g * 587 + b * 114) / 1000 > 160;
+}
+
+function safeColor(color: string): string {
+  const c = color.replace('#', '');
+  return /^[0-9a-fA-F]{6}$/.test(c) ? color : '#888888';
 }
 
 export default function App() {
@@ -29,24 +35,26 @@ export default function App() {
   const [viewingSales, setViewingSales] = useState<Sale[]>([]);
   const [tappedId, setTappedId] = useState<string | null>(null);
   const [modifierButton, setModifierButton] = useState<DrinkButton | null>(null);
+  const [dbError, setDbError] = useState<string | null>(null);
   const tappedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadSessions = useCallback(async () => {
-    const { data } = await supabase.from('sessions').select('*').order('created_at', { ascending: false });
-    if (data) {
-      setSessions(data);
-      setActiveSession(data.find(s => s.is_active) ?? null);
-    }
+    const { data, error } = await supabase.from('sessions').select('*').order('created_at', { ascending: false });
+    if (error) { setDbError(`sessions: ${error.message}`); return; }
+    setSessions(data ?? []);
+    setActiveSession(data?.find(s => s.is_active) ?? null);
   }, []);
 
   const loadButtons = useCallback(async () => {
-    const { data } = await supabase.from('drink_buttons').select('*').order('display_order');
-    if (data) setButtons(data);
+    const { data, error } = await supabase.from('drink_buttons').select('*').order('display_order');
+    if (error) { setDbError(`buttons: ${error.message}`); return; }
+    setButtons(data ?? []);
   }, []);
 
   const loadModifiers = useCallback(async () => {
-    const { data } = await supabase.from('button_modifiers').select('*').order('display_order');
-    if (data) setModifiers(data);
+    const { data, error } = await supabase.from('button_modifiers').select('*').order('display_order');
+    if (error) { setDbError(`modifiers: ${error.message}`); return; }
+    setModifiers(data ?? []);
   }, []);
 
   const loadSales = useCallback(async (sessionId: string) => {
@@ -203,9 +211,16 @@ export default function App() {
         <div className="mx-4 mt-4 p-4 rounded-2xl bg-red-900/30 border border-red-700/50">
           <p className="text-sm font-semibold text-red-300">Database not configured</p>
           <p className="text-xs text-red-400/80 mt-1">
-            Add GitHub secrets <span className="font-mono">VITE_SUPABASE_URL</span> and{' '}
-            <span className="font-mono">VITE_SUPABASE_ANON_KEY</span> to your repository, then re-run the deploy workflow.
+            The app cannot reach its database. If this is the published site, try republishing from Bolt.
           </p>
+        </div>
+      )}
+
+      {/* Database query error */}
+      {dbError && (
+        <div className="mx-4 mt-4 p-4 rounded-2xl bg-red-900/30 border border-red-700/50">
+          <p className="text-sm font-semibold text-red-300">Database error</p>
+          <p className="text-xs text-red-400/80 mt-1 break-words font-mono">{dbError}</p>
         </div>
       )}
 
@@ -240,14 +255,14 @@ export default function App() {
                     disabled={!activeSession}
                     className="relative rounded-3xl overflow-hidden border-2 disabled:opacity-40 disabled:cursor-not-allowed"
                     style={{
-                      backgroundColor: btn.color,
+                      backgroundColor: safeColor(btn.color),
                       borderColor: 'rgba(0,0,0,0.15)',
                       minHeight: '160px',
                       transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                       transform: isTapped ? 'scale(0.94)' : 'scale(1)',
                       boxShadow: isTapped
-                        ? `0 0 0 4px rgba(255,255,255,0.8), 0 0 30px 6px ${btn.color}88`
-                        : `0 6px 24px ${btn.color}44`,
+                        ? `0 0 0 4px rgba(255,255,255,0.8), 0 0 30px 6px ${safeColor(btn.color)}88`
+                        : `0 6px 24px ${safeColor(btn.color)}44`,
                     }}
                   >
                     {btn.image_url && (
